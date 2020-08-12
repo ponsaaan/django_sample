@@ -7,3 +7,6 @@
 * アプリケーションを起動
   * docker-compose up -d --build
 * localhost:8000にアクセス
+
+* コマンド実行
+  * docker-compose exec django <command you want to do>
