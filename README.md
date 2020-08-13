@@ -10,3 +10,9 @@
 
 * コマンド実行
   * docker-compose exec django <command you want to do>
+  
+## その他
+* dockerコンテナ のなかに入る
+  * sudo docker exec -i -t コンテナ名またはコンテナID bash
+  or
+  * sudo docker attach コンテナ名またはコンテナID
