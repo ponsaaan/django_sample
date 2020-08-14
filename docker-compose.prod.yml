@@ -8,7 +8,7 @@ services:
         # appディレクトリの中から`Dockerfile`を探す
         build: ./app
         # 正常起動後に実行するコマンド
-        command: python3 manage.py runserver 0.0.0.0:8000
+        command: gunicorn django_demo.wsgi:application --bind 0.0.0.0:8000
         # データを永続化させる場合の設定。`host:container`でパスを記載
         volumes:
             - ./app/:/usr/src/app/
@@ -37,6 +37,16 @@ services:
         ports:
             # ホスト側のポートはローカルのpsqlとバッティングするので5432以外にする
             - 5433:5432
+
+    nginx:
+        container_name: nginx
+        build: ./nginx
+        volumes:
+            - ./django/static:/usr/src/app/static
+        ports:
+            - 80:80
+        depends_on:
+            - django
 
 # トップレベルに書く「名前付きvolumes」は複数サービスから参照できる
 volumes:

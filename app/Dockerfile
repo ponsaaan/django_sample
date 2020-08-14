@@ -1,5 +1,14 @@
-# 公式からpython3.7 on alpine linuxイメージをpull
-FROM python:3.7-alpine
+# ubuntuのイメージをプルし、Pythonをインストールしていく
+FROM ubuntu:20.04
+
+SHELL ["/bin/bash", "-c"]
+
+# pythonをインストール
+RUN apt-get update -y \
+    && apt-get upgrade -y \
+    && apt-get install -y python3.8 python3.8-dev \
+    && source ~/.bashrc \
+    && apt-get -y install vim
 
 # 作業ディレクトリを設定
 WORKDIR /usr/src/app
@@ -9,23 +18,40 @@ WORKDIR /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 # Pythonが標準入出力をバッファリングすることを防ぐ
 ENV PYTHONUNBUFFERED 1
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 依存関係のインストールとpipenvをインストール
+RUN apt-get install -y curl \
+    && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
+    && apt-get install -y python3.8-distutils \
+    && python3.8 get-pip.py \
+    && pip install -U pip \
+    && apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev libpq-dev
+
+# pipenvのインストール
+RUN pip install pipenv
 
 # psycopg2のインストール
-RUN apk update \
-    && apk add --virtual build-deps gcc python3-dev musl-dev \
-    && apk add postgresql-dev \
-    && pip install psycopg2 \
-    && apk del build-deps
-
-# Pipenvをインストール
-RUN pip install --upgrade pip \
-&& pip install pipenv
+RUN pip install psycopg2
 
 # ホストのpipfileをコンテナの作業ディレクトリにコピー
 COPY ./Pipfile /usr/src/app/Pipfile
 
-# pipfileからパッケージをインストールしてDjango環境を構築
-RUN pipenv install --skip-lock --system --dev
+# Pipfile.lockを無視してPipfileに記載のパッケージをシステムにインストール
+# その後、pipenvをアンインストール
+RUN pipenv install --system --skip-lock \
+    && pip uninstall -y pipenv virtualenv-clone virtualenv
+
+# 地理空間ライブラリをインストールする際の依存関係
+RUN apt-get update -y \
+    && apt-get upgrade -y \
+    && apt-get install -y libgeos-dev binutils libproj-dev gdal-bin libgdal-dev \
+    && apt-get install -y python3-gdal
+
+RUN apt-get install -y netcat \
+    && apt-get install -y expect
+
+COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
 
 # ホストのカレントディレクトリ（現在はappディレクトリ）を作業ディレクトリにコピー
 COPY . /usr/src/app/
