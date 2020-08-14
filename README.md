@@ -7,6 +7,14 @@
 * .envファイルを配置受け取る
 * アプリケーションをビルド&起動
   * docker-compose up -d --build
+* DB生成
+  * docker-compose exec django python3 manage.py migrate
+* adminユーザー生成
+  * docker-compose exec django python3 manage.py createsuperuser
+  * username: root
+  * pass: password
+* 初期データを読み込む
+  * docker-compose exec django python3 manage.py loaddata app/polls/fixtures/polls.json
 * localhost:8000にアクセス
 
 * コマンド実行
